@@ -1,5 +1,13 @@
 import * as Yup from 'yup';
-import { startOfHour, parseISO, isBefore, format, subHours } from 'date-fns';
+import { Op } from 'sequelize';
+import {
+  startOfHour,
+  endOfHour,
+  parseISO,
+  isBefore,
+  format,
+  subHours,
+} from 'date-fns';
 import ptBR from 'date-fns/locale/pt-BR';
 
 import User from '../models/User';
@@ -49,6 +57,7 @@ class AppointmentController {
     }
 
     const { provider_id, date } = req.body;
+    const parsedDate = parseISO(date);
 
     /**
      * Check if user is not provider_id
@@ -75,7 +84,7 @@ class AppointmentController {
     /**
      * Check for past dates
      */
-    const hourStart = startOfHour(parseISO(date));
+    const hourStart = startOfHour(parsedDate);
 
     if (isBefore(hourStart, new Date())) {
       return res.status(400).json({ error: 'Past date are not allowed.' });
@@ -88,7 +97,9 @@ class AppointmentController {
       where: {
         provider_id,
         canceled_at: null,
-        date: hourStart,
+        date: {
+          [Op.between]: [startOfHour(parsedDate), endOfHour(parsedDate)],
+        },
       },
     });
 
