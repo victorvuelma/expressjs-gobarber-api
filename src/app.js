@@ -1,9 +1,11 @@
 import 'dotenv/config';
 
 import path from 'path';
-import express from 'express';
-import 'express-async-errors';
 
+import express from 'express';
+
+import 'express-async-errors';
+import delay from 'express-delay';
 import cors from 'cors';
 
 import Youch from 'youch';
@@ -34,6 +36,10 @@ class App {
       '/files',
       express.static(path.resolve(__dirname, '..', 'tmp', 'uploads'))
     );
+
+    if (process.env.NODE_ENV === 'development') {
+      this.server.use(delay(200));
+    }
   }
 
   routes() {
